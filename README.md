@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LinkPage
+
+A personal link-in-bio page for **Safan Abbasi** — a clean, responsive single-page site to share important links in one place.
+
+**Live at [linktree.safanabbasi.com](https://linktree.safanabbasi.com/)**
+
+![Screenshot](docs/Screenshot%202026-03-24%20011234.png)
+
+## Tech Stack
+
+- **Next.js 16** (App Router)
+- **React 19**
+- **TypeScript**
+- **Tailwind CSS 4**
+- **Lucide React** for icons
+
+## Features
+
+- Profile header with avatar, name, and bio
+- Colored link buttons with brand-matched backgrounds and hover effects
+- Mobile-first responsive layout
+- Statically generated for fast page loads
+- Ready for Vercel deployment
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── layout.tsx        # Root layout, fonts, metadata
+│   ├── page.tsx          # Main link page
+│   └── globals.css       # Tailwind v4 theme config
+├── components/
+│   ├── ProfileHeader.tsx # Avatar + name + bio
+│   ├── LinkButton.tsx    # Colored link button with icon
+│   └── Footer.tsx        # Copyright footer
+└── data/
+    └── links.ts          # Link data and profile info
+```
 
-## Learn More
+## Customization
 
-To learn more about Next.js, take a look at the following resources:
+Edit `src/data/links.ts` to update your profile info and links:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```typescript
+export const profile = {
+  name: "Your Name",
+  title: "Your Title",
+  bio: "Your tagline.",
+  avatarUrl: "/avatar.jpeg",
+};
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Add or remove links in the `links` array. Each link has a label, URL, background color, hover color, and icon.
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy to [Vercel](https://vercel.com) by importing this repo. Vercel auto-detects Next.js and handles everything.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Roadmap
+
+- **Phase 2** — Click tracking with Supabase
+- **Phase 3** — Admin dashboard with analytics and link management
+- **Phase 4** — Animations, dark mode, OG images, QR codes
+
+See [docs/linktree-clone-implementation-plan.md](docs/linktree-clone-implementation-plan.md) for the full plan.
+
+## License
+
+MIT
