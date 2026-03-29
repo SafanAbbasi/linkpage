@@ -209,13 +209,13 @@ export const profile = {
 6. Site will be live at `my-links-safanabbasi.vercel.app` (customizable)
 
 ### Phase 1 acceptance criteria
-- [ ] Page loads with profile header (avatar, name, title)
-- [ ] Four link buttons render with correct colors and icons
-- [ ] All links open correctly (GitHub, LinkedIn, portfolio in new tab; resume downloads)
-- [ ] Hover effects work smoothly
-- [ ] Page is responsive and looks good on mobile
-- [ ] Deployed and accessible via Vercel URL
-- [ ] Page metadata (title, description, OG image) is set
+- [x] Page loads with profile header (avatar, name, title)
+- [x] Four link buttons render with correct colors and icons
+- [x] All links open correctly (GitHub, LinkedIn, portfolio in new tab; resume downloads)
+- [x] Hover effects work smoothly
+- [x] Page is responsive and looks good on mobile
+- [x] Deployed and accessible via Vercel URL — [linktree.safanabbasi.com](https://linktree.safanabbasi.com/)
+- [x] Page metadata (title, description, OG image) is set
 
 ---
 
@@ -263,13 +263,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key-here
 ```
 
-Also add a **server-only** key for route handlers (no `NEXT_PUBLIC_` prefix — never exposed to browser):
+Add both variables in Vercel dashboard under Settings → Environment Variables.
 
-```
-SUPABASE_SECRET_KEY=your-secret-key-here
-```
-
-Add all three variables in Vercel dashboard under Settings → Environment Variables.
+> **Note:** The secret key (`service_role`) is not needed for Phase 2. The publishable key works because the RLS policy allows anonymous inserts. The secret key will be added in Phase 3 when the admin dashboard needs unrestricted read access.
 
 ### New files
 
@@ -295,12 +291,12 @@ import { createClient } from "@supabase/supabase-js";
 export function createServerSupabaseClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   );
 }
 ```
 
-> **Why a server-only key?** Route handlers run on the server — using the secret key here bypasses RLS, which is fine for trusted server code like click tracking. For Phase 3, we'll add a cookie-based client using `@supabase/ssr` that respects RLS based on the logged-in user.
+> **Note:** This uses the publishable key since RLS allows anonymous inserts. In Phase 3, we'll add a separate server client using the secret key for admin operations that need to bypass RLS.
 
 #### `src/lib/supabase/client.ts`
 
@@ -395,11 +391,11 @@ CREATE POLICY "Allow authenticated reads" ON clicks
 ```
 
 ### Phase 2 acceptance criteria
-- [ ] Clicking a link logs an entry in the Supabase `clicks` table
-- [ ] Click tracking is non-blocking (user experiences no delay)
-- [ ] Referrer and user agent are captured
-- [ ] Environment variables are set in both `.env.local` and Vercel
-- [ ] RLS is enabled with appropriate policies
+- [x] Clicking a link logs an entry in the Supabase `clicks` table
+- [x] Click tracking is non-blocking (user experiences no delay)
+- [x] Referrer and user agent are captured
+- [x] Environment variables are set in both `.env.local` and Vercel
+- [x] RLS is enabled with appropriate policies
 
 ---
 
