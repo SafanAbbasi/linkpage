@@ -3,15 +3,31 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import ClickChart from "@/components/ClickChart";
 import LinkStats from "@/components/LinkStats";
+import SortableLinkItem from "@/components/SortableLinkItem";
+import QRCode from "@/components/QRCode";
 import {
   MousePointerClick,
   CalendarDays,
   TrendingUp,
   LogOut,
   Plus,
-  Trash2,
   ExternalLink,
   LayoutDashboard,
 } from "lucide-react";
@@ -41,7 +57,6 @@ export default function AdminPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const router = useRouter();
 
-  // New link form state
   const [newLabel, setNewLabel] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [newBgColor, setNewBgColor] = useState("#333333");
@@ -49,6 +64,13 @@ export default function AdminPage() {
   const [newIcon, setNewIcon] = useState("");
 
   const supabase = createBrowserSupabaseClient();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const fetchData = useCallback(async () => {
     const [analyticsRes, linksRes] = await Promise.all([
@@ -84,6 +106,27 @@ export default function AdminPage() {
     if (!confirm("Delete this link?")) return;
     await supabase.from("links").delete().eq("id", id);
     fetchData();
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = links.findIndex((l) => l.id === active.id);
+    const newIndex = links.findIndex((l) => l.id === over.id);
+    const reordered = arrayMove(links, oldIndex, newIndex);
+
+    // Optimistic update
+    setLinks(reordered);
+
+    // Persist new sort orders
+    const updates = reordered.map((link, i) =>
+      supabase
+        .from("links")
+        .update({ sort_order: i + 1 })
+        .eq("id", link.id)
+    );
+    await Promise.all(updates);
   };
 
   const handleAddLink = async (e: React.FormEvent) => {
@@ -130,19 +173,28 @@ export default function AdminPage() {
   );
 
   const topLinkLabel =
-    links.find((l) => l.id === topLink?.link_id)?.label || topLink?.link_id || "—";
+    links.find((l) => l.id === topLink?.link_id)?.label ||
+    topLink?.link_id ||
+    "—";
+
+  const siteUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://www.safanabbasi.com";
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600">
               <LayoutDashboard className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">LinkPage Admin</h1>
+              <h1 className="text-lg font-bold text-gray-900">
+                LinkPage Admin
+              </h1>
               <p className="text-xs text-gray-500">Analytics & Management</p>
             </div>
           </div>
@@ -207,20 +259,26 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Charts + QR Code */}
         {analytics && (
-          <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <LinkStats clicksPerLink={analytics.clicksPerLink} links={links} />
             <ClickChart dailyClicks={analytics.dailyClicks} />
+            <QRCode url={siteUrl} />
           </div>
         )}
 
         {/* Links Management */}
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-            <h2 className="text-base font-semibold text-gray-900">
-              Manage Links
-            </h2>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Manage Links
+              </h2>
+              <p className="text-xs text-gray-400">
+                Drag to reorder
+              </p>
+            </div>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
@@ -230,7 +288,6 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Add Link Form (collapsible) */}
           {showAddForm && (
             <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-5">
               <form onSubmit={handleAddLink} className="flex flex-col gap-3">
@@ -293,49 +350,27 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Links List */}
-          <div className="divide-y divide-gray-50">
-            {links.map((link) => (
-              <div
-                key={link.id}
-                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50/50"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl text-white text-xs font-bold"
-                    style={{ backgroundColor: link.bg_color }}
-                  >
-                    {link.label.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{link.label}</p>
-                    <p className="text-sm text-gray-400">{link.url}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="mr-2 text-xs text-gray-400">
-                    #{link.sort_order}
-                  </span>
-                  <button
-                    onClick={() => handleToggleActive(link.id, link.is_active)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      link.is_active
-                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                    }`}
-                  >
-                    {link.is_active ? "Active" : "Inactive"}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(link.id)}
-                    className="rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={links.map((l) => l.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="divide-y divide-gray-50">
+                {links.map((link) => (
+                  <SortableLinkItem
+                    key={link.id}
+                    link={link}
+                    onToggleActive={handleToggleActive}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       </div>
     </main>

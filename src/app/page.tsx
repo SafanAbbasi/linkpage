@@ -1,10 +1,11 @@
 import ProfileHeader from "@/components/ProfileHeader";
-import LinkButton from "@/components/LinkButton";
+import AnimatedLinks from "@/components/AnimatedLinks";
 import Footer from "@/components/Footer";
+import ThemeToggle from "@/components/ThemeToggle";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { LinkItem } from "@/data/links";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 export default async function Home() {
   const supabase = createServerSupabaseClient();
@@ -14,7 +15,6 @@ export default async function Home() {
     .eq("is_active", true)
     .order("sort_order");
 
-  // Map database columns (snake_case) to component props (camelCase)
   const links: LinkItem[] = (dbLinks || []).map((row) => ({
     id: row.id,
     label: row.label,
@@ -25,14 +25,11 @@ export default async function Home() {
   }));
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 transition-colors duration-300 dark:bg-gray-950">
+      <ThemeToggle />
       <div className="mx-auto max-w-md px-6 py-8">
         <ProfileHeader />
-        <div className="flex flex-col gap-4">
-          {links.map((link) => (
-            <LinkButton key={link.id} link={link} />
-          ))}
-        </div>
+        <AnimatedLinks links={links} />
         <Footer />
       </div>
     </main>
