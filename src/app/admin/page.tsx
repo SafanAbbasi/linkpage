@@ -30,6 +30,8 @@ import {
   Plus,
   ExternalLink,
   LayoutDashboard,
+  Download,
+  Trash2,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -50,11 +52,19 @@ interface LinkRow {
   is_active: boolean;
 }
 
+interface RedirectRow {
+  slug: string;
+  destination_url: string;
+  created_at: string;
+}
+
 export default function AdminPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [links, setLinks] = useState<LinkRow[]>([]);
+  const [redirects, setRedirects] = useState<RedirectRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddRedirect, setShowAddRedirect] = useState(false);
   const router = useRouter();
 
   const [newLabel, setNewLabel] = useState("");
@@ -62,6 +72,9 @@ export default function AdminPage() {
   const [newBgColor, setNewBgColor] = useState("#333333");
   const [newHoverColor, setNewHoverColor] = useState("#555555");
   const [newIcon, setNewIcon] = useState("");
+
+  const [newSlug, setNewSlug] = useState("");
+  const [newDestination, setNewDestination] = useState("");
 
   const supabase = createBrowserSupabaseClient();
 
@@ -73,9 +86,10 @@ export default function AdminPage() {
   );
 
   const fetchData = useCallback(async () => {
-    const [analyticsRes, linksRes] = await Promise.all([
+    const [analyticsRes, linksRes, redirectsRes] = await Promise.all([
       fetch("/api/analytics"),
       supabase.from("links").select("*").order("sort_order"),
+      supabase.from("redirects").select("*").order("created_at"),
     ]);
 
     if (analyticsRes.ok) {
@@ -83,6 +97,9 @@ export default function AdminPage() {
     }
     if (linksRes.data) {
       setLinks(linksRes.data);
+    }
+    if (redirectsRes.data) {
+      setRedirects(redirectsRes.data);
     }
     setLoading(false);
   }, [supabase]);
@@ -108,6 +125,11 @@ export default function AdminPage() {
     fetchData();
   };
 
+  const handleEdit = async (id: string, updates: Partial<LinkRow>) => {
+    await supabase.from("links").update(updates).eq("id", id);
+    fetchData();
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -116,10 +138,8 @@ export default function AdminPage() {
     const newIndex = links.findIndex((l) => l.id === over.id);
     const reordered = arrayMove(links, oldIndex, newIndex);
 
-    // Optimistic update
     setLinks(reordered);
 
-    // Persist new sort orders
     const updates = reordered.map((link, i) =>
       supabase
         .from("links")
@@ -153,6 +173,31 @@ export default function AdminPage() {
     setShowAddForm(false);
     fetchData();
   };
+
+  const handleAddRedirect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanSlug = newSlug.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    await supabase.from("redirects").insert({
+      slug: cleanSlug,
+      destination_url: newDestination,
+    });
+    setNewSlug("");
+    setNewDestination("");
+    setShowAddRedirect(false);
+    fetchData();
+  };
+
+  const handleDeleteRedirect = async (slug: string) => {
+    if (!confirm(`Delete shortlink /${slug}?`)) return;
+    await supabase.from("redirects").delete().eq("slug", slug);
+    fetchData();
+  };
+
+  const getClickCount = (linkId: string) =>
+    analytics?.clicksPerLink?.find((c) => c.link_id === linkId)?.count || 0;
+
+  const getRedirectClickCount = (slug: string) =>
+    analytics?.clicksPerLink?.find((c) => c.link_id === `redirect:${slug}`)?.count || 0;
 
   if (loading) {
     return (
@@ -199,6 +244,13 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <a
+              href="/api/analytics/export"
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export CSV
+            </a>
             <a
               href="/"
               target="_blank"
@@ -275,9 +327,7 @@ export default function AdminPage() {
               <h2 className="text-base font-semibold text-gray-900">
                 Manage Links
               </h2>
-              <p className="text-xs text-gray-400">
-                Drag to reorder
-              </p>
+              <p className="text-xs text-gray-400">Drag to reorder</p>
             </div>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
@@ -364,13 +414,114 @@ export default function AdminPage() {
                   <SortableLinkItem
                     key={link.id}
                     link={link}
+                    clickCount={getClickCount(link.id)}
                     onToggleActive={handleToggleActive}
                     onDelete={handleDelete}
+                    onEdit={handleEdit}
                   />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
+        </div>
+
+        {/* Short Links */}
+        <div className="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Short Links
+              </h2>
+              <p className="text-xs text-gray-400">
+                safanabbasi.com/slug redirects and tracks clicks
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddRedirect(!showAddRedirect)}
+              className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" />
+              Add Shortlink
+            </button>
+          </div>
+
+          {showAddRedirect && (
+            <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-5">
+              <form onSubmit={handleAddRedirect} className="flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                    Slug
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-400">safanabbasi.com/</span>
+                    <input
+                      type="text"
+                      value={newSlug}
+                      onChange={(e) => setNewSlug(e.target.value)}
+                      placeholder="github"
+                      required
+                      className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                    Destination URL
+                  </label>
+                  <input
+                    type="text"
+                    value={newDestination}
+                    onChange={(e) => setNewDestination(e.target.value)}
+                    placeholder="https://github.com/..."
+                    required
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+                >
+                  Save
+                </button>
+              </form>
+            </div>
+          )}
+
+          <div className="divide-y divide-gray-50">
+            {redirects.map((r) => (
+              <div
+                key={r.slug}
+                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-gray-50/50"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">
+                    /{r.slug}
+                  </p>
+                  <p className="text-sm text-gray-400">{r.destination_url}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-xs text-gray-400" title="Total clicks">
+                    <MousePointerClick className="h-3 w-3" />
+                    {getRedirectClickCount(r.slug)}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${siteUrl}/${r.slug}`);
+                    }}
+                    className="rounded-lg px-3 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRedirect(r.slug)}
+                    className="rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </main>
