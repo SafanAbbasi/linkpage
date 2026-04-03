@@ -18,7 +18,7 @@ import {
   SiGooglecloud,
   SiJavascript,
   SiHtml5,
-  SiCss3,
+  SiCss,
   SiRedis,
   SiFastapi,
   SiAnsible,
@@ -161,10 +161,9 @@ export default function SkillsSection() {
                     }}
                   >
                     {skill.icon && (
-                      <skill.icon
-                        className="h-4 w-4 shrink-0"
-                        style={{ color: skill.color }}
-                      />
+                      <span className="shrink-0" style={{ color: skill.color }}>
+                        <skill.icon className="h-4 w-4" />
+                      </span>
                     )}
                     {skill.name}
                   </motion.span>
