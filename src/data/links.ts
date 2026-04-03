@@ -5,6 +5,7 @@ export interface LinkItem {
   bgColor: string;
   hoverColor: string;
   icon?: string;
+  description?: string;
 }
 
 export const links: LinkItem[] = [
@@ -44,7 +45,9 @@ export const links: LinkItem[] = [
 
 export const profile = {
   name: "Safan Abbasi",
-  title: "Software Developer",
-  bio: "Building things for the web.",
+  greeting: "Hey, I'm Safan!",
+  title: "Software Engineer & NASA Patent Co-Inventor",
+  skills: ["Full-Stack Engineering", "AI & LLM Systems", "Cloud Architecture"],
+  bio: "I build innovative solutions for complex technical challenges, with a focus on scalable and impactful results!",
   avatarUrl: "/avatar.jpeg",
 };
