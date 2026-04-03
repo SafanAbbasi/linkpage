@@ -13,7 +13,8 @@ const projects = [
     tech: ["Python", "FastAPI", "Docker", "Gemini", "FastMCP"],
     icon: FaRobot,
     color: "#8b5cf6",
-    link: null,
+    link: "https://github.com/SafanAbbasi/GeneratePromptTool",
+    linkLabel: "View Source",
   },
   {
     title: "NASA Patent",
