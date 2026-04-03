@@ -32,6 +32,7 @@ import {
   LayoutDashboard,
   Download,
   Trash2,
+  MessageSquare,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -58,10 +59,19 @@ interface RedirectRow {
   created_at: string;
 }
 
+interface MessageRow {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  created_at: string;
+}
+
 export default function AdminPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [links, setLinks] = useState<LinkRow[]>([]);
   const [redirects, setRedirects] = useState<RedirectRow[]>([]);
+  const [messages, setMessages] = useState<MessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAddRedirect, setShowAddRedirect] = useState(false);
@@ -86,10 +96,11 @@ export default function AdminPage() {
   );
 
   const fetchData = useCallback(async () => {
-    const [analyticsRes, linksRes, redirectsRes] = await Promise.all([
+    const [analyticsRes, linksRes, redirectsRes, messagesRes] = await Promise.all([
       fetch("/api/analytics"),
       supabase.from("links").select("*").order("sort_order"),
       supabase.from("redirects").select("*").order("created_at"),
+      supabase.from("messages").select("*").order("created_at", { ascending: false }),
     ]);
 
     if (analyticsRes.ok) {
@@ -100,6 +111,9 @@ export default function AdminPage() {
     }
     if (redirectsRes.data) {
       setRedirects(redirectsRes.data);
+    }
+    if (messagesRes.data) {
+      setMessages(messagesRes.data);
     }
     setLoading(false);
   }, [supabase]);
@@ -190,6 +204,12 @@ export default function AdminPage() {
   const handleDeleteRedirect = async (slug: string) => {
     if (!confirm(`Delete shortlink /${slug}?`)) return;
     await supabase.from("redirects").delete().eq("slug", slug);
+    fetchData();
+  };
+
+  const handleDeleteMessage = async (id: number) => {
+    if (!confirm("Delete this message?")) return;
+    await supabase.from("messages").delete().eq("id", id);
     fetchData();
   };
 
@@ -522,6 +542,69 @@ export default function AdminPage() {
               </div>
             ))}
           </div>
+        </div>
+        {/* Messages */}
+        <div className="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-gray-400" />
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">
+                  Messages
+                </h2>
+                <p className="text-xs text-gray-400">
+                  {messages.length} message{messages.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {messages.length === 0 ? (
+            <div className="px-6 py-8 text-center text-sm text-gray-400">
+              No messages yet
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className="px-6 py-4 transition-colors hover:bg-gray-50/50"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900">{msg.name}</p>
+                        <a
+                          href={`mailto:${msg.email}`}
+                          className="truncate text-sm text-violet-600 hover:underline"
+                        >
+                          {msg.email}
+                        </a>
+                      </div>
+                      <p className="mt-1 text-sm whitespace-pre-wrap text-gray-600">
+                        {msg.message}
+                      </p>
+                      <p className="mt-2 text-xs text-gray-400">
+                        {new Date(msg.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="shrink-0 rounded-lg p-2 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

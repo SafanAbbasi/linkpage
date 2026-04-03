@@ -150,19 +150,6 @@ export default function ProfileHeader({
         {profile.bio}
       </motion.p>
 
-      {/* CTA */}
-      <motion.p
-        className="mt-3 text-center text-sm font-medium text-gray-600 dark:text-gray-300"
-        initial={shouldAnimate ? { opacity: 0 } : false}
-        animate={{ opacity: 1 }}
-        transition={
-          shouldAnimate
-            ? { delay: 1.8, duration: 0.5, ease: "easeOut" }
-            : { duration: 0 }
-        }
-      >
-        Connect with me below!
-      </motion.p>
     </div>
   );
 }

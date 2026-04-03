@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Safan Abbasi — Links";
+export const alt = "Safan Abbasi — Software Engineer";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -16,7 +16,7 @@ export default function OGImage() {
           justifyContent: "center",
           width: "100%",
           height: "100%",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #0d9488 0%, #1e3a5f 50%, #0f172a 100%)",
           fontFamily: "system-ui, sans-serif",
         }}
       >
@@ -64,7 +64,7 @@ export default function OGImage() {
               marginTop: 8,
             }}
           >
-            Software Developer
+            Software Engineer &amp; NASA Patent Co-Inventor
           </div>
           <div
             style={{
@@ -75,7 +75,7 @@ export default function OGImage() {
               color: "#9ca3af",
             }}
           >
-            GitHub &bull; LinkedIn &bull; Portfolio &bull; Resume
+            Full-Stack Engineering &bull; AI &amp; LLM Systems &bull; Cloud Architecture
           </div>
         </div>
       </div>

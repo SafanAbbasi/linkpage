@@ -15,14 +15,15 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 8,
-          background: "#0d9488",
+          background: "linear-gradient(135deg, #0d9488 0%, #1e3a5f 100%)",
           color: "white",
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: 700,
           fontFamily: "system-ui, sans-serif",
+          letterSpacing: -0.5,
         }}
       >
-        S
+        SA
       </div>
     ),
     { ...size }

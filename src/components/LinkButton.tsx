@@ -34,7 +34,14 @@ const particleColors = [
 export default function LinkButton({ link }: { link: LinkItem }) {
   const Icon = link.icon ? iconMap[link.icon] : null;
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
+
+  useState(() => {
+    if (typeof window !== "undefined") {
+      setIsTouchDevice("ontouchstart" in window);
+    }
+  });
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -72,9 +79,19 @@ export default function LinkButton({ link }: { link: LinkItem }) {
         href={link.url}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={handleClick}
-        onMouseEnter={() => setIsFlipped(true)}
-        onMouseLeave={() => setIsFlipped(false)}
+        onClick={(e) => {
+          if (isTouchDevice && link.description) {
+            if (!isFlipped) {
+              e.preventDefault();
+              setIsFlipped(true);
+              setTimeout(() => setIsFlipped(false), 2000);
+              return;
+            }
+          }
+          handleClick(e);
+        }}
+        onMouseEnter={() => !isTouchDevice && setIsFlipped(true)}
+        onMouseLeave={() => !isTouchDevice && setIsFlipped(false)}
         className="block"
         style={{ perspective: 800 }}
       >

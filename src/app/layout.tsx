@@ -17,13 +17,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.safanabbasi.com"),
-  title: "Safan Abbasi — Links",
+  title: "Safan Abbasi — Software Engineer",
   description:
-    "Find Safan Abbasi on GitHub, LinkedIn, and more. Software Developer building things for the web.",
+    "Full-Stack Software Engineer & NASA Patent Co-Inventor. Building scalable solutions with AI, cloud architecture, and modern web technologies.",
   openGraph: {
-    title: "Safan Abbasi — Links",
+    title: "Safan Abbasi — Software Engineer",
     description:
-      "Find Safan Abbasi on GitHub, LinkedIn, and more. Software Developer building things for the web.",
+      "Full-Stack Software Engineer & NASA Patent Co-Inventor. Building scalable solutions with AI, cloud architecture, and modern web technologies.",
     type: "website",
   },
 };
