@@ -28,10 +28,10 @@ const projects = [
     linkLabel: "View Patent",
   },
   {
-    title: "LinkPage",
+    title: "Personal Portfolio",
     year: "2025",
     description:
-      "This portfolio site — built from scratch with Next.js 16, featuring animated backgrounds, card flip interactions, click analytics, an admin dashboard, and a contact form.",
+      "This portfolio site — built from scratch with Next.js 16, featuring animated backgrounds, card flip interactions, click analytics, an admin dashboard, and a contact form with email replies.",
     tech: ["Next.js", "React", "Supabase", "Motion", "Tailwind"],
     icon: FaCode,
     color: "#3b82f6",

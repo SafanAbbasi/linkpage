@@ -77,7 +77,7 @@ export default function ProfileHeader({
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         />
         <div
-          className="relative h-[140px] w-[140px] overflow-hidden rounded-full p-1 shadow-lg shadow-teal-500/25"
+          className="relative h-[170px] w-[170px] overflow-hidden rounded-full p-1 shadow-lg shadow-teal-500/25"
           style={{ backgroundColor: "#0d9488" }}
         >
           {imgError ? (
@@ -88,8 +88,8 @@ export default function ProfileHeader({
             <Image
               src={profile.avatarUrl}
               alt={profile.name}
-              width={140}
-              height={140}
+              width={170}
+              height={170}
               className="h-full w-full rounded-full object-cover"
               priority
               onError={() => setImgError(true)}
