@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Safan Abbasi — Software Engineer",
   description:
     "Full-Stack Software Engineer & NASA Patent Co-Inventor. Building scalable solutions with AI, cloud architecture, and modern web technologies.",
+  verification: {
+    google: "C7rvR625RScm8kL9IxcgsZLKLz3Jb-icDZsZRFnb2zw",
+  },
   openGraph: {
     title: "Safan Abbasi — Software Engineer",
     description:
